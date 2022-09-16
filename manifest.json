@@ -1,6 +1,6 @@
 {
-  "name": "Canvas Grades",
-  "description": "Shows grades for classes on the dashboard of canvas!",
+  "name": "Canvas Plus",
+  "description": "Adds quality of life improvements to Canvas UI!",
   "version": "1.0",
   "background":{
     "service_worker": "background.js"
