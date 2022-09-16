@@ -1,0 +1,11 @@
+{
+  "name": "Canvas Grades",
+  "description": "Shows grades for classes on the dashboard of canvas!",
+  "version": "1.0",
+  "background":{
+    "service_worker": "background.js"
+  },
+  "permissions": ["scripting"],
+  "host_permissions": ["<all_urls>"],
+  "manifest_version": 3
+}
