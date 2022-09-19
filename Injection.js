@@ -74,7 +74,9 @@ function CanvasClassGrade() {
 		text = document.createTextNode(getGradeText(JSON.parse(httpGet(courseID)))[1])
 		div.appendChild(text)
 		div.className = 'current-grade';
-		document.getElementsByClassName('ic-app-nav-toggle-and-crumbs')[0].appendChild(div);
+		document.getElementsByClassName('ic-app-nav-toggle-and-crumbs')[0].insertBefore(div.cloneNode(true), document.getElementsByClassName('right-of-crumbs')[0]);
+		document.getElementsByClassName('mobile-header-space')[0].appendChild(div.cloneNode(true))
+		
 	}
 	catch(e){
 		console.log(e)
