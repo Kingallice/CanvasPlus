@@ -71,7 +71,7 @@ function CanvasClassGrade() {
 		courseID = courseID[courseID.indexOf('courses')+1]
 		console.log(getGradeText(JSON.parse(httpGet(courseID))))
 		div = document.createElement('div')
-		text = document.createTextNode(getGradeText(JSON.parse(httpGet(courseID))))
+		text = document.createTextNode(getGradeText(JSON.parse(httpGet(courseID)))[1])
 		div.appendChild(text)
 		div.className = 'current-grade';
 		document.getElementsByClassName('ic-app-nav-toggle-and-crumbs')[0].appendChild(div);
