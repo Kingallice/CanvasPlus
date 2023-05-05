@@ -1,4 +1,5 @@
 mainCanvasURL = 'https://'+window.location.href.split('/')[2];
+var CanvasData = {}
 
 function getGradeText(jsonResponse){
 	if(jsonResponse["enrollments"][0]["computed_current_score"] != null){
@@ -83,9 +84,60 @@ function CanvasClassGrade() {
 	}
 }
 
+function getCourses(){
+	let data = []
+	let i = 0
+	while(true){
+		i++;
+	//for(let i = 1; i < 5; i++){
+		let xmlHttp = new XMLHttpRequest();
+		xmlHttp.open("GET", mainCanvasURL+'/api/v1/users/self/courses?include[]=total_scores&enrollment_state=active&per_page=20&page='+i, false);
+		/*
+		if(event.target.readyState == 4){
+					let temp = JSON.parse(event.target.response);
+					if(temp.length > 0)
+						temp.forEach(element => {
+							canvasData["courses"].push(JSON.stringify(element));
+						})
+				}
+			}*/
+		xmlHttp.send();
+		temp = JSON.parse(xmlHttp.response)
+		if(temp.length <= 0)
+			break;
+		for(let j = 0; j < temp.length; j++){
+			data.push(temp[j])
+		}
+	}
+	return data;
+}
+
+function getCourseDataByID(courseID){
+	for(let i = 0; i < CanvasData["courses"].length; i++){
+		if (CanvasData["courses"][i]["id"] == courseID)
+			return CanvasData["courses"][i];
+	}
+	return false
+}
+function getCourseDataByCode(courseCode){
+	for(let i = 0; i < CanvasData["courses"].length; i++){
+		if (CanvasData["courses"][i]["course_code"] == courseCode)
+			return CanvasData["courses"][i];
+	}
+	return false
+}
+
 const init = function(){
 	CanvasGradeOverlays();
 	CanvasClassGrade();
+
+	CanvasData["courses"] = getCourses();
+
+	listObj = document.getElementsByClassName("ic-DashboardCard__header-subtitle")
+	for(let i = 0; i < listObj.length; i++){
+		console.log(getCourseDataByCode(listObj[i].innerHTML))
+	}
+	//console.log(getCourseDataByCode("CYBR-435-01.1231"));
 	// inject = document.createElement("div");
 	// inject.className = "CanvasGrades-element";
 	// inject.onload = httpGet();
