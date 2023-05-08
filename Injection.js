@@ -10,52 +10,6 @@ function getGradeText(jsonResponse){
 	}
 }
 
-function CanvasGradeOverlays() {
-	try {
-		if(window.location.href.split('/').length > 4)
-			return;
-		function httpGet()
-		{
-			var xmlHttp = new XMLHttpRequest();
-			xmlHttp.open( "GET", mainCanvasURL+'/api/v1/users/self/courses?include[]=total_scores&enrollment_state=active&per_page=20', false ); // false for synchronous request
-			xmlHttp.send( null );
-			getParts(xmlHttp.response);
-		}
-		function getParts(response){
-			response = JSON.parse(response);
-			response.forEach(function t(x){
-				temp = getGradeText(x)
-				setGrade(temp[0], temp[1])
-			});
-		}
-		function setGrade(name, grade){
-			elementArr = document.getElementsByClassName("ic-DashboardCard");
-			for(let i = 0; i < elementArr.length; i++){
-				x = elementArr[i];
-				if(name == x.getAttribute("aria-label")){
-					a = x.children[0];
-					b = a;
-					node = document.createElement("div");
-					text = document.createTextNode(grade);
-					node.appendChild(text);
-					node.className = 'grade-overlay'
-					//node.style = "position:absolute; top:0; left:0; text-align:center; font-size:15pt; color:white; padding:10px; background-color:black; border-radius: 0 0 25px 0; width: 75px;";
-					b.appendChild(node);
-				}
-			}
-		}
-
-		overlay = document.createElement("div");
-		overlay.className = "CanvasPlus-element";
-		overlay.onload = httpGet();
-
-		document.body.appendChild(overlay);
-	}
-	catch(e){
-		//console.log(e)
-	}
-}
-
 function CanvasClassGrade() {
 	try {
 		if(!window.location.href.includes('courses'))
@@ -84,23 +38,14 @@ function CanvasClassGrade() {
 	}
 }
 
+//Adds all courses of the user to an array as json objects and returns it
 function getCourses(){
 	let data = []
 	let i = 0
 	while(true){
 		i++;
-	//for(let i = 1; i < 5; i++){
 		let xmlHttp = new XMLHttpRequest();
 		xmlHttp.open("GET", mainCanvasURL+'/api/v1/users/self/courses?include[]=total_scores&enrollment_state=active&per_page=20&page='+i, false);
-		/*
-		if(event.target.readyState == 4){
-					let temp = JSON.parse(event.target.response);
-					if(temp.length > 0)
-						temp.forEach(element => {
-							canvasData["courses"].push(JSON.stringify(element));
-						})
-				}
-			}*/
 		xmlHttp.send();
 		temp = JSON.parse(xmlHttp.response)
 		if(temp.length <= 0)
@@ -112,6 +57,7 @@ function getCourses(){
 	return data;
 }
 
+//Gets course data of user using a course id
 function getCourseDataByID(courseID){
 	for(let i = 0; i < CanvasData["courses"].length; i++){
 		if (CanvasData["courses"][i]["id"] == courseID)
@@ -119,6 +65,7 @@ function getCourseDataByID(courseID){
 	}
 	return false
 }
+//Gets course data of user using a course code
 function getCourseDataByCode(courseCode){
 	for(let i = 0; i < CanvasData["courses"].length; i++){
 		if (CanvasData["courses"][i]["course_code"] == courseCode)
@@ -127,21 +74,60 @@ function getCourseDataByCode(courseCode){
 	return false
 }
 
-const init = function(){
-	CanvasGradeOverlays();
-	CanvasClassGrade();
-
-	CanvasData["courses"] = getCourses();
-
+//Goes through all current cards on the dashboard and grabs data to add to card.
+//1. Adds current grade percentage to the card if enrolled as student and grade exists, if grade is unavailable, then N/A will be shown
+function addToCards(){
 	listObj = document.getElementsByClassName("ic-DashboardCard__header-subtitle")
 	for(let i = 0; i < listObj.length; i++){
-		console.log(getCourseDataByCode(listObj[i].innerHTML))
+		temp = getCourseDataByCode(listObj[i].innerHTML)
+		if (temp && Object.keys(temp).indexOf("enrollments") != -1){
+			for(let j = 0; j < Object.keys(temp["enrollments"]).length; j++){
+				enrollData = temp["enrollments"][j]
+				if(Object.keys(enrollData).indexOf('type') != -1
+					&& enrollData["type"] == "student"
+					&& Object.keys(enrollData).indexOf('computed_current_score') != -1)
+				{
+					addGradeToCard(listObj[i].parentElement.parentElement.parentElement, enrollData["computed_current_score"])
+					break;
+				}
+			}
+		}
 	}
-	//console.log(getCourseDataByCode("CYBR-435-01.1231"));
-	// inject = document.createElement("div");
-	// inject.className = "CanvasGrades-element";
-	// inject.onload = httpGet();
-	
+
+}
+//Adds a grade overlay to the obj with the value of grade
+function addGradeToCard(obj, grade){
+	div = document.createElement('div')
+	text = document.createTextNode("N/A")
+	if(grade)
+		text = document.createTextNode(grade + "%")
+	div.appendChild(text)
+	div.className = 'grade-overlay';
+	obj.appendChild(div)
+}
+
+function removeSurveyPrompt(){
+	button = document.getElementsByClassName("ek-widget-btn-primary")
+	if (button.length > 0){
+		evalhref = document.getElementsByClassName("ek-widget-btn-primary")[0].href
+		evalLink = document.createElement('a')
+		evalText = document.createTextNode("Student Evals")
+		evalLink.appendChild(evalText)
+		evalLink.href = evalhref
+		document.getElementById("footer-links").appendChild(evalLink)
+		document.body.removeChild(document.getElementById("ek-modal"))
+		document.body.removeChild(document.getElementById("ek-overlay"))
+	}
+}
+
+const init = function(){
+	//CanvasGradeOverlays();
+	CanvasClassGrade();
+
+	CanvasData["courses"] = getCourses();//Sets CanvasData["courses"] to an array of all of the user courses
+
+	addToCards(); //Adds features to dashboard cards
+	removeSurveyPrompt(); //Removes the prompt to do course evaluations
 	console.log("Injection Complete");
 }
 try {
